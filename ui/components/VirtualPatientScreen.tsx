@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Sparkles, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock, X } from 'lucide-react';
 import { useScenario } from '../context/ScenarioContext';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,9 @@ export const VirtualPatientScreen: React.FC = () => {
   const [notification, setNotification] = useState<{ message: string; type: 'start' | 'stop' } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true); // Sidebar toggle for desktop - default open
   const [cameraOn, setCameraOn] = useState(false); // Camera state
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null); // Camera stream
   const [cameraError, setCameraError] = useState<string | null>(null); // Camera error state
+  const videoRef = useRef<HTMLVideoElement>(null); // Video element ref
   const [timeLeft, setTimeLeft] = useState<number>(0); // Timer in seconds
   const [timerStarted, setTimerStarted] = useState(false); // Timer started flag
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null); // Selected AI persona
@@ -181,12 +183,18 @@ export const VirtualPatientScreen: React.FC = () => {
   // Toggle camera function
   const toggleCamera = useCallback(async () => {
     if (cameraOn) {
+      // Stop camera
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
+      }
       setCameraOn(false);
       setCameraError(null);
       playCameraSound('stop');
     } else {
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setCameraStream(stream);
         setCameraOn(true);
         setCameraError(null);
         playCameraSound('start');
@@ -195,7 +203,14 @@ export const VirtualPatientScreen: React.FC = () => {
         setCameraOn(false);
       }
     }
-  }, [cameraOn, playCameraSound]);
+  }, [cameraOn, cameraStream, playCameraSound]);
+
+  // Connect video element to stream
+  useEffect(() => {
+    if (videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream]);
 
   // Safety check if user lands here without selection
   useEffect(() => {
@@ -272,6 +287,36 @@ export const VirtualPatientScreen: React.FC = () => {
         <img src="/Backgrounds-01.png" alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
+
+      {/* Camera Preview Popup */}
+      {cameraOn && cameraStream && (
+        <div className="fixed bottom-32 left-6 z-40 animate-in fade-in slide-in-from-left-4 duration-300">
+          <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2 bg-black/40 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <span className="text-xs font-medium text-slate-300">Camera Preview</span>
+              </div>
+              <button 
+                onClick={toggleCamera}
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                title="Close camera"
+              >
+                <X className="w-4 h-4 text-slate-400 hover:text-white" />
+              </button>
+            </div>
+            {/* Video */}
+            <video 
+              ref={videoRef}
+              autoPlay 
+              playsInline 
+              muted
+              className="w-64 h-48 object-cover"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full relative z-10 backdrop-blur-none">

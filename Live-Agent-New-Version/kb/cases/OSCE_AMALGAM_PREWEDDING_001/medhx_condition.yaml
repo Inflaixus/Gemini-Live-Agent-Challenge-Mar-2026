@@ -1,0 +1,13 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_MEDHX_CONDITION
+case_id: OSCE_AMALGAM_PREWEDDING_001
+topic: medical_history_condition
+visibility_rule: answer_only_if_asked
+slot: medhx.condition
+ask_patterns:
+  - "medical condition"
+  - "any conditions"
+  - "health problems"
+  - "any medical history"
+  - "do you have diabetes"
+content: |
+  If asked about medical conditions: "Yes, I have type 1 diabetes."

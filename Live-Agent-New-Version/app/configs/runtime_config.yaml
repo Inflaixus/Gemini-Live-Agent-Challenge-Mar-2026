@@ -1,0 +1,41 @@
+# Runtime configuration — loaded by app.core.config at startup.
+# All values can be overridden by environment variables of the same name.
+
+# --- Audio / VAD ---
+voice_name: "Aoede"
+silence_duration_ms: 5
+prefix_padding_ms: 10
+audio_activity_peak_threshold: 380
+
+# --- Transcription ---
+input_audio_transcription_enabled: false
+output_audio_transcription_enabled: true
+
+# --- Turn coverage ---
+turn_coverage_mode: "all_input"   # "all_input" or "activity_only"
+
+# --- Video throttling ---
+video_min_forward_interval_ms: 0
+video_suppress_during_audio_ms: 0
+video_max_staleness_ms: 0
+
+# --- Native audio features ---
+enable_proactivity: false
+enable_affective_dialog: true
+
+# --- Response modality ---
+live_response_modality: "AUDIO"   # "AUDIO" or "TEXT"
+
+# --- Session resumption ---
+session_resumption_handle_ttl_seconds: 7200  # 2 hours
+
+# --- WebSocket queues ---
+audio_queue_maxsize: 200
+json_queue_maxsize: 200
+
+# --- Downstream retry ---
+max_downstream_retries: 5
+
+# --- Context window compression ---
+compression_trigger_tokens: 25000
+compression_target_tokens: 12500

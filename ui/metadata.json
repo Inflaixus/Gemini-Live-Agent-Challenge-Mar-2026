@@ -1,0 +1,7 @@
+{
+  "name": "Dental OSCE Simulator",
+  "description": "A virtual patient training tool for dental OSCE exams.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

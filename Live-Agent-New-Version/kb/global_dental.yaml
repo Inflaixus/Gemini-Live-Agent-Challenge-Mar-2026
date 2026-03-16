@@ -1,0 +1,12 @@
+chunk_id: GLOBAL_DENTAL_GENERIC_V1
+scenario_type: global
+topic: generic_dental_patient_answers
+audience: patient_agent
+content: |
+  If asked general oral health questions and the active scenario has no specific detail:
+  - Answer briefly as a patient without clinical claims.
+  Examples:
+  - "I brush twice a day."
+  - "I try to floss, but not always."
+  - "I see the hygienist regularly."
+  If you truly don't know, say: "I'm not sure."

@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+*.egg
+dist/
+build/
+.kiro/
+.venv/
+venv/
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfvars
+terraform/.terraform.lock.hcl

@@ -9,10 +9,15 @@ ask_patterns:
   - "how long"
   - "how many visits"
   - "how many appointments"
+  - "how many time"
+  - "how many session"
+  - "how often"
   - "when can we"
   - "availability"
   - "schedule"
   - "time frame"
+  - "how much time"
+  - "take how long"
   - "whitening"
 content: |
   If asked about timeline/availability/number of visits:

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock, X, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock, X, Wifi, WifiOff, MessageSquare } from 'lucide-react';
 import { useScenario } from '../context/ScenarioContext';
-import { useLiveAgent } from '../hooks/useLiveAgent';
+import { useLiveAgent, TranscriptMessage } from '../hooks/useLiveAgent';
 import { useNavigate } from 'react-router-dom';
 
 export const VirtualPatientScreen: React.FC = () => {
@@ -17,7 +17,9 @@ export const VirtualPatientScreen: React.FC = () => {
     stopRecording,
     startVideo,
     stopVideo,
-    error: agentError 
+    error: agentError,
+    transcripts,
+    clearTranscripts
   } = useLiveAgent();
   
   const [showInfo, setShowInfo] = useState(true); // Toggle for sidebar - default open
@@ -32,6 +34,9 @@ export const VirtualPatientScreen: React.FC = () => {
   const [timerStarted, setTimerStarted] = useState(false); // Timer started flag
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null); // Selected AI persona
   const warningPlayedRef = useRef(false); // Track if warning sound was played
+  const [showTranscript, setShowTranscript] = useState(false); // Toggle for transcript panel
+  const transcriptEndRef = useRef<HTMLDivElement>(null); // For auto-scroll
+  const [activeTab, setActiveTab] = useState<'brief' | 'transcript'>('brief'); // Sidebar tab
 
   // Extract time from instructions (e.g., "You have 8 minutes.")
   const getTimerDuration = useCallback(() => {
@@ -223,6 +228,13 @@ export const VirtualPatientScreen: React.FC = () => {
       videoRef.current.srcObject = cameraStream;
     }
   }, [cameraStream]);
+
+  // Auto-scroll transcript to bottom when new messages arrive
+  useEffect(() => {
+    if (transcriptEndRef.current) {
+      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [transcripts]);
 
   // Safety check if user lands here without selection
   useEffect(() => {
@@ -589,9 +601,9 @@ export const VirtualPatientScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Sidebar Info Panel (Candidate Brief) */}
+      {/* Sidebar Info Panel (Candidate Brief & Transcript) */}
       <div className={`
-        fixed inset-y-0 right-0 w-[420px] bg-gradient-to-b from-slate-900/98 via-slate-900/95 to-slate-950/98 backdrop-blur-2xl border-l border-white/10 shadow-2xl transform transition-all duration-300 z-30 overflow-y-auto
+        fixed inset-y-0 right-0 w-[420px] bg-gradient-to-b from-slate-900/98 via-slate-900/95 to-slate-950/98 backdrop-blur-2xl border-l border-white/10 shadow-2xl transform transition-all duration-300 z-30 overflow-hidden flex flex-col
         md:relative md:shadow-[0_0_60px_rgba(0,0,0,0.5)] md:bg-gradient-to-b md:from-slate-900/40 md:via-slate-900/30 md:to-slate-950/40
         ${showInfo ? 'translate-x-0' : 'translate-x-full'}
         ${sidebarOpen ? 'md:translate-x-0 md:w-[420px] md:opacity-100' : 'md:translate-x-full md:w-0 md:opacity-0 md:overflow-hidden'}
@@ -599,135 +611,205 @@ export const VirtualPatientScreen: React.FC = () => {
         {/* Decorative top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-medical-500/50 to-transparent"></div>
         
-        <div className="p-6 space-y-5">
-          
-          {/* Header with icon */}
-          <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-            <div className="p-2.5 rounded-xl bg-medical-500/10 border border-medical-500/20">
-              <Clipboard className="w-5 h-5 text-medical-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Candidate Brief</h2>
-              <p className="text-xs text-slate-500">Review before starting</p>
-            </div>
-          </div>
+        {/* Tabs Header */}
+        <div className="flex border-b border-white/10 bg-black/20">
+          <button
+            onClick={() => setActiveTab('brief')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-200 ${
+              activeTab === 'brief'
+                ? 'text-medical-400 border-b-2 border-medical-500 bg-medical-500/5'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Clipboard className="w-4 h-4" />
+            Brief
+          </button>
+          <button
+            onClick={() => setActiveTab('transcript')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-200 relative ${
+              activeTab === 'transcript'
+                ? 'text-medical-400 border-b-2 border-medical-500 bg-medical-500/5'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Transcript
+            {transcripts.length > 0 && activeTab !== 'transcript' && (
+              <span className="absolute top-2 right-4 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {transcripts.length > 99 ? '99+' : transcripts.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-          {/* Radiograph Image if available */}
-          {selectedScenario.brief?.imageUrl && (
-            <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 shadow-lg">
-              <img 
-                src={selectedScenario.brief.imageUrl} 
-                alt="Radiograph" 
-                className="w-full h-48 object-cover grayscale opacity-80 hover:opacity-100 transition-opacity"
-              />
-              <div className="bg-black/60 p-2.5 text-xs text-center text-slate-400 border-t border-white/10">
-                Figure 1: Periapical Radiograph
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Brief Tab */}
+          {activeTab === 'brief' && (
+            <div className="p-6 space-y-5">
+              {/* Radiograph Image if available */}
+              {selectedScenario.brief?.imageUrl && (
+                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 shadow-lg">
+                  <img 
+                    src={selectedScenario.brief.imageUrl} 
+                    alt="Radiograph" 
+                    className="w-full h-48 object-cover grayscale opacity-80 hover:opacity-100 transition-opacity"
+                  />
+                  <div className="bg-black/60 p-2.5 text-xs text-center text-slate-400 border-t border-white/10">
+                    Figure 1: Periapical Radiograph
+                  </div>
+                </div>
+              )}
+
+              {/* Main Info Card */}
+              <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/10 space-y-4 text-sm shadow-inner backdrop-blur-sm">
+                
+                {/* Theme */}
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-8 rounded-full bg-medical-500"></div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Theme</span>
+                    <span className="font-semibold text-white text-base">{selectedScenario.title}</span>
+                  </div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                {/* Patient Details */}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Patient Details</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
+                      <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Name</span>
+                      <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.name}</span>
+                    </div>
+                    <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
+                      <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Age</span>
+                      <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.age} years</span>
+                    </div>
+                    <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
+                      <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Gender</span>
+                      <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.gender}</span>
+                    </div>
+                    {selectedScenario.patientProfile.occupation && (
+                      <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
+                        <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Occupation</span>
+                        <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.occupation}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                {/* Scenario Text */}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Scenario</span>
+                  <p className="text-slate-300 leading-relaxed">
+                    {selectedScenario.brief?.scenario || "Patient details are confidential. Please proceed with the examination."}
+                  </p>
+                </div>
+
+                {/* Task / At this station */}
+                {selectedScenario.brief?.task && (
+                  <div className="bg-gradient-to-br from-medical-500/10 to-indigo-500/10 p-4 rounded-xl border border-medical-500/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-medical-500/10 rounded-full blur-2xl"></div>
+                    <span className="text-[10px] font-bold text-medical-300 uppercase tracking-widest block mb-2">At this station</span>
+                    <p className="text-white leading-relaxed font-medium relative z-10">
+                      {selectedScenario.brief.task}
+                    </p>
+                  </div>
+                )}
+
+                {/* Instructions */}
+                {selectedScenario.brief?.instructions && (
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Instructions</span>
+                    <ul className="space-y-2">
+                      {selectedScenario.brief.instructions.map((inst, i) => (
+                        <li key={i} className="flex items-start gap-2 text-slate-300">
+                          <span className="w-5 h-5 rounded-full bg-medical-500/20 text-medical-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                            {i + 1}
+                          </span>
+                          <span>{inst}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Clinical Notes Input */}
+              <div className="pt-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-medical-400" />
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Notes</h3>
+                </div>
+                <div className="relative">
+                  <textarea 
+                    value={userNotes}
+                    onChange={(e) => setUserNotes(e.target.value)}
+                    placeholder="Type your clinical notes here..."
+                    className="w-full h-28 bg-white/[0.03] border border-white/10 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-medical-500/50 focus:border-medical-500/30 resize-none transition-all duration-300"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Main Info Card */}
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/10 space-y-4 text-sm shadow-inner backdrop-blur-sm">
-            
-            {/* Theme */}
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-8 rounded-full bg-medical-500"></div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Theme</span>
-                <span className="font-semibold text-white text-base">{selectedScenario.title}</span>
-              </div>
-            </div>
-
-            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-            {/* Patient Details */}
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Patient Details</span>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
-                  <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Name</span>
-                  <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.name}</span>
+          {/* Transcript Tab */}
+          {activeTab === 'transcript' && (
+            <div className="p-4 flex flex-col h-full">
+              {transcripts.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+                  <MessageSquare className="w-12 h-12 text-slate-600 mb-4" />
+                  <p className="text-slate-400 text-sm">No conversation yet</p>
+                  <p className="text-slate-600 text-xs mt-1">Start a session to see the transcript</p>
                 </div>
-                <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
-                  <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Age</span>
-                  <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.age} years</span>
-                </div>
-                <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
-                  <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Gender</span>
-                  <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.gender}</span>
-                </div>
-                {selectedScenario.patientProfile.occupation && (
-                  <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
-                    <span className="text-slate-500 text-[10px] uppercase tracking-wider block mb-1">Occupation</span>
-                    <span className="text-slate-200 font-medium">{selectedScenario.patientProfile.occupation}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-            {/* Scenario Text */}
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Scenario</span>
-              <p className="text-slate-300 leading-relaxed">
-                {selectedScenario.brief?.scenario || "Patient details are confidential. Please proceed with the examination."}
-              </p>
-            </div>
-
-            {/* Task / At this station */}
-            {selectedScenario.brief?.task && (
-              <div className="bg-gradient-to-br from-medical-500/10 to-indigo-500/10 p-4 rounded-xl border border-medical-500/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-medical-500/10 rounded-full blur-2xl"></div>
-                <span className="text-[10px] font-bold text-medical-300 uppercase tracking-widest block mb-2">At this station</span>
-                <p className="text-white leading-relaxed font-medium relative z-10">
-                  {selectedScenario.brief.task}
-                </p>
-              </div>
-            )}
-
-            {/* Instructions */}
-            {selectedScenario.brief?.instructions && (
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Instructions</span>
-                <ul className="space-y-2">
-                  {selectedScenario.brief.instructions.map((inst, i) => (
-                    <li key={i} className="flex items-start gap-2 text-slate-300">
-                      <span className="w-5 h-5 rounded-full bg-medical-500/20 text-medical-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                        {i + 1}
-                      </span>
-                      <span>{inst}</span>
-                    </li>
+              ) : (
+                <div className="space-y-3">
+                  {transcripts.map((msg, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`flex items-start gap-2 max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          msg.role === 'user' ? 'bg-medical-500/20' : 'bg-slate-700'
+                        }`}>
+                          {msg.role === 'user' ? (
+                            <User className="w-4 h-4 text-medical-400" />
+                          ) : (
+                            <span className="text-sm">{personas.find(p => p.id === selectedPersona)?.emoji || '🤖'}</span>
+                          )}
+                        </div>
+                        <div 
+                          className={`px-4 py-3 rounded-2xl text-sm ${
+                            msg.role === 'user' 
+                              ? 'bg-medical-600 text-white rounded-tr-md' 
+                              : 'bg-slate-700/80 text-slate-200 rounded-tl-md'
+                          }`}
+                        >
+                          <p className="leading-relaxed">{msg.text}</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Clinical Notes Input */}
-          <div className="pt-3">
-            <div className="flex items-center gap-2 mb-3">
-              <FileText className="w-4 h-4 text-medical-400" />
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Notes</h3>
+                  <div ref={transcriptEndRef} />
+                </div>
+              )}
             </div>
-            <div className="relative">
-              <textarea 
-                value={userNotes}
-                onChange={(e) => setUserNotes(e.target.value)}
-                placeholder="Type your clinical notes here..."
-                className="w-full h-28 bg-white/[0.03] border border-white/10 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-medical-500/50 focus:border-medical-500/30 resize-none transition-all duration-300"
-              />
-            </div>
-          </div>
+          )}
+        </div>
 
-          {/* End Session Button */}
+        {/* Footer - End Session Button */}
+        <div className="p-4 border-t border-white/10 bg-black/20">
           <button 
             onClick={handleBack}
             className="w-full py-3.5 px-4 bg-white/5 border border-white/10 text-slate-300 font-semibold rounded-xl hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-300 transition-all duration-300"
           >
             End Session
           </button>
-
         </div>
       </div>
       

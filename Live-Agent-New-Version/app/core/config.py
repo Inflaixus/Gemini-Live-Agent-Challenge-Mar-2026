@@ -213,7 +213,7 @@ class Settings:
         self.rag_stopwords: set[str] = set(rag_cfg.get("stopwords", []))
 
         # --- Scenario ---
-        self.default_scenario: str = os.getenv("SCENARIO", "scenario_1")
+        self.default_scenario: str = os.getenv("SCENARIO", "OSCE_AMALGAM_PREWEDDING_001")
 
     def validate_live_audio(self) -> None:
         """Fail fast on known bad model + modality combinations."""

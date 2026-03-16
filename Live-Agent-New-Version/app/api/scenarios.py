@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/scenarios", tags=["scenarios"])
 
-KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parent.parent.parent / "knowledge_base" / "scenarios"
+KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parent.parent.parent / "kb" / "cases"
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:

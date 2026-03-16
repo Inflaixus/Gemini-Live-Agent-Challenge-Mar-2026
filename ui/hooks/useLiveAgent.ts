@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
+export interface TranscriptMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+}
+
 interface UseLiveAgentReturn {
   isConnected: boolean;
   isRecording: boolean;
@@ -14,6 +20,8 @@ interface UseLiveAgentReturn {
   stopVideo: () => void;
   isVideoOn: boolean;
   error: string | null;
+  transcripts: TranscriptMessage[];
+  clearTranscripts: () => void;
 }
 
 // Audio Worklet Processor code as a blob
@@ -65,6 +73,7 @@ export const useLiveAgent = (): UseLiveAgentReturn => {
   const [isRecording, setIsRecording] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transcripts, setTranscripts] = useState<TranscriptMessage[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const captureCtxRef = useRef<AudioContext | null>(null);
@@ -135,9 +144,23 @@ export const useLiveAgent = (): UseLiveAgentReturn => {
       case 'go_away':
         console.log('Session will refresh soon');
         break;
-      // transcript handling skipped for now
+      case 'transcript':
+        // Only add non-partial (complete) transcripts
+        if (!data.partial && data.text && data.text.trim()) {
+          setTranscripts(prev => [...prev, {
+            role: data.role,
+            text: data.text.trim(),
+            timestamp: Date.now()
+          }]);
+        }
+        break;
     }
   }, [resetPlayback]);
+
+  // Clear transcripts
+  const clearTranscripts = useCallback(() => {
+    setTranscripts([]);
+  }, []);
 
   // Connect to WebSocket
   const connect = useCallback((voiceName?: string) => {
@@ -377,5 +400,7 @@ export const useLiveAgent = (): UseLiveAgentReturn => {
     stopVideo,
     isVideoOn,
     error,
+    transcripts,
+    clearTranscripts,
   };
 };

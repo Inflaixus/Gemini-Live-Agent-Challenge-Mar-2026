@@ -274,11 +274,20 @@ class LiveSession:
         audio = getattr(part, "audio", None)
         if audio is not None:
             self.enqueue_audio(getattr(audio, "data", None))
+        
+        # Skip thought parts (internal reasoning)
         if getattr(part, "thought", False):
+            print(f"[DEBUG] Skipping thought=True part")
             return
+        
         text = getattr(part, "text", None)
         if text:
-            self.enqueue_transcript(role=role, text=text, partial=partial)
+            # Debug: print all part attributes to understand structure
+            print(f"[DEBUG] Part attributes: {[a for a in dir(part) if not a.startswith('_')]}")
+            print(f"[DEBUG] emit_part text: '{text[:100]}...' (role={role}, partial={partial})")
+            # Skip text parts - we only want output_transcription for the actual spoken words
+            # Text parts from content.parts are usually internal reasoning
+            return
 
     # -- upstream: client → ADK ------------------------------------------
 
@@ -436,6 +445,21 @@ class LiveSession:
 
     def _handle_event(self, event) -> None:
         """Process a single ADK live event."""
+        # Handle transcriptions directly from event (ADK format)
+        output_tx_direct = getattr(event, "output_transcription", None)
+        if output_tx_direct is not None:
+            text = getattr(output_tx_direct, "text", "") or ""
+            if text:
+                print(f"[AI RESPONSE] {text}")
+                self.enqueue_transcript(role="model", text=text, partial=bool(getattr(event, "partial", False)))
+        
+        input_tx_direct = getattr(event, "input_transcription", None)
+        if input_tx_direct is not None:
+            text = getattr(input_tx_direct, "text", "") or ""
+            if text:
+                print(f"[USER INPUT] {text}")
+                self.enqueue_transcript(role="user", text=text, partial=bool(getattr(event, "partial", False)))
+        
         # Session resumption
         resume_update = _extract_session_resumption_update(event)
         if resume_update is not None:
@@ -477,9 +501,13 @@ class LiveSession:
         if server_content is not None:
             output_tx = getattr(server_content, "output_transcription", None)
             if output_tx is not None:
+                output_text = getattr(output_tx, "text", "") or ""
+                print(f"[DEBUG] output_transcription received: '{output_text}' (partial={partial})")
+                if output_text:
+                    logger.info("AI Response: %s", output_text)
                 self.enqueue_transcript(
                     role="model",
-                    text=getattr(output_tx, "text", "") or "",
+                    text=output_text,
                     partial=partial,
                 )
             input_tx = getattr(server_content, "input_transcription", None)

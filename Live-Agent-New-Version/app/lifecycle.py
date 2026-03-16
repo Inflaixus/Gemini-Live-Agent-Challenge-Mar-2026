@@ -30,9 +30,8 @@ def startup() -> None:
     settings.validate_live_audio()
 
     # 4. Agent
-    from app.agents.patient_agent import create_agent
-    agent, _kb = create_agent()
+    from app.agents.patient_agent import root_agent
 
     # 5. Agent service
     from app.services.agent_service import init as init_agent_service
-    init_agent_service(agent)
+    init_agent_service(root_agent)

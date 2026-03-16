@@ -12,6 +12,8 @@ COPY kb/ kb/
 COPY static/ static/
 
 RUN pip install --upgrade pip \
+    && pip install --no-cache-dir \
+        torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir .
 
 ENV PORT=8080

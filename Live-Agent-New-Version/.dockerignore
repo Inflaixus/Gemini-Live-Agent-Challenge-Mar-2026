@@ -1,0 +1,14 @@
+.venv/
+.git/
+.env
+__pycache__/
+*.pyc
+.kiro/
+.vscode/
+*.egg-info/
+terraform/
+tests/
+docs/
+scripts/
+bilingual_audio_agent/
+/venv

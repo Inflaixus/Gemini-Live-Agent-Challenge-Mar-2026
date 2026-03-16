@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock, X } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, User, Info, AlertTriangle, FileText, Clipboard, Check, PanelRightClose, PanelRightOpen, Video, VideoOff, Clock, X, Wifi, WifiOff } from 'lucide-react';
 import { useScenario } from '../context/ScenarioContext';
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useLiveAgent } from '../hooks/useLiveAgent';
 import { useNavigate } from 'react-router-dom';
 
 export const VirtualPatientScreen: React.FC = () => {
   const { selectedScenario, clearScenario } = useScenario();
   const navigate = useNavigate();
   const { 
-    isListening, 
-    status, 
-    startListening, 
-    stopListening, 
-    resetTranscript,
-    error: micError 
-  } = useSpeechRecognition();
+    isConnected,
+    isRecording,
+    isVideoOn,
+    connect,
+    disconnect,
+    startRecording,
+    stopRecording,
+    startVideo,
+    stopVideo,
+    error: agentError 
+  } = useLiveAgent();
   
   const [showInfo, setShowInfo] = useState(true); // Toggle for sidebar - default open
   const [userNotes, setUserNotes] = useState(''); // State for user clinical notes
@@ -183,6 +187,10 @@ export const VirtualPatientScreen: React.FC = () => {
   // Toggle camera function
   const toggleCamera = useCallback(async () => {
     if (cameraOn) {
+      // Stop video streaming first if active
+      if (isVideoOn) {
+        stopVideo();
+      }
       // Stop camera
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
@@ -198,12 +206,16 @@ export const VirtualPatientScreen: React.FC = () => {
         setCameraOn(true);
         setCameraError(null);
         playCameraSound('start');
+        // If already recording, start video streaming
+        if (isRecording && isConnected) {
+          startVideo(stream);
+        }
       } catch (err) {
         setCameraError('Camera permission denied');
         setCameraOn(false);
       }
     }
-  }, [cameraOn, cameraStream, playCameraSound]);
+  }, [cameraOn, cameraStream, playCameraSound, isRecording, isConnected, isVideoOn, startVideo, stopVideo]);
 
   // Connect video element to stream
   useEffect(() => {
@@ -221,33 +233,51 @@ export const VirtualPatientScreen: React.FC = () => {
 
   if (!selectedScenario) return null;
 
-  // Determine patient gender and available personas
+  // Determine patient gender and available personas with actual Gemini voice names
   const patientGender = selectedScenario.patientProfile?.gender?.toLowerCase();
   const isMale = patientGender === 'male';
   
   const personas = isMale ? [
-    { id: 'male1', name: 'Ahmed', emoji: '👨🏼', voice: 'Deep & Calm' },
-    { id: 'male2', name: 'Omar', emoji: '👨🏻', voice: 'Friendly & Warm' }
+    { id: 'male1', name: 'Ahmed', emoji: '👨🏼', voice: 'Deep & Calm', voiceName: 'Orus' },
+    { id: 'male2', name: 'Omar', emoji: '👨🏻', voice: 'Friendly & Warm', voiceName: 'Puck' }
   ] : [
-    { id: 'female1', name: 'Sara', emoji: '👩🏻', voice: 'Soft & Professional' },
-    { id: 'female2', name: 'Nour', emoji: '👩🏽', voice: 'Gentle & Caring' }
+    { id: 'female1', name: 'Sara', emoji: '👩🏻', voice: 'Soft & Professional', voiceName: 'Aoede' },
+    { id: 'female2', name: 'Nour', emoji: '👩🏽', voice: 'Gentle & Caring', voiceName: 'Kore' }
   ];
 
   const handleBack = () => {
-    stopListening();
-    resetTranscript();
+    stopRecording();
+    stopVideo();
+    disconnect();
     clearScenario();
   };
 
-  const toggleListening = () => {
-    if (isListening) {
-      stopListening();
+  const toggleSession = async () => {
+    if (isRecording) {
+      stopRecording();
+      if (cameraOn && cameraStream) {
+        stopVideo();
+      }
       playSound('stop');
-      showNotification('Microphone disconnected', 'stop');
+      showNotification('Session ended', 'stop');
     } else {
-      startListening();
-      playSound('start');
-      showNotification('Microphone connected', 'start');
+      // Get the selected persona's voice name
+      const selectedVoiceName = personas.find(p => p.id === selectedPersona)?.voiceName;
+      
+      // Connect WebSocket first if not connected
+      if (!isConnected) {
+        connect(selectedVoiceName);
+      }
+      // Wait a bit for connection then start recording
+      setTimeout(async () => {
+        await startRecording();
+        // If camera is already on, start video streaming
+        if (cameraOn && cameraStream) {
+          startVideo(cameraStream);
+        }
+        playSound('start');
+        showNotification('Session started', 'start');
+      }, 500);
     }
   };
 
@@ -418,7 +448,7 @@ export const VirtualPatientScreen: React.FC = () => {
                       )}
                     </div>
                     {/* Animated Rings for AI */}
-                    {isListening && (
+                    {isRecording && (
                       <>
                         <div className="absolute inset-0 rounded-full border border-medical-500/50 animate-[ping_2s_linear_infinite] opacity-50"></div>
                         <div className="absolute -inset-4 rounded-full border border-medical-500/30 animate-[ping_3s_linear_infinite] opacity-30"></div>
@@ -460,12 +490,6 @@ export const VirtualPatientScreen: React.FC = () => {
                   <span className="text-medical-300 text-sm font-medium">
                     Voice: {personas.find(p => p.id === selectedPersona)?.name}
                   </span>
-                  <button 
-                    onClick={() => setSelectedPersona(null)}
-                    className="text-slate-400 hover:text-white text-xs underline"
-                  >
-                    Change
-                  </button>
                 </div>
               </div>
             )}
@@ -474,18 +498,17 @@ export const VirtualPatientScreen: React.FC = () => {
             <div className="space-y-6">
               <div className="h-8">
                 <p className="text-slate-400 font-light tracking-wide text-sm uppercase">
-                  {status === 'idle' && "Not Connected"}
-                  {status === 'listening' && <span className="text-medical-400 animate-pulse">● Listening...</span>}
-                  {status === 'processing' && <span className="text-blue-400">Processing...</span>}
-                  {status === 'error' && <span className="text-red-400">Connection Issue</span>}
+                  {!isConnected && !isRecording && "Not Connected"}
+                  {isConnected && !isRecording && <span className="text-blue-400">● Connected - Ready</span>}
+                  {isRecording && <span className="text-medical-400 animate-pulse">● Listening...</span>}
                 </p>
               </div>
 
               {/* Error Message */}
-              {micError && (
+              {agentError && (
                 <div className="bg-red-500/10 text-red-300 px-4 py-3 rounded-lg text-sm border border-red-500/20 inline-flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
-                  {micError}
+                  {agentError}
                 </div>
               )}
             </div>
@@ -514,15 +537,15 @@ export const VirtualPatientScreen: React.FC = () => {
 
             {/* Main Mic Button */}
             <button
-              onClick={toggleListening}
+              onClick={toggleSession}
               className={`
                 relative flex items-center gap-3 px-8 py-4 rounded-full shadow-lg transition-all duration-300 font-semibold text-lg
-                ${isListening 
+                ${isRecording 
                   ? 'bg-red-500 hover:bg-red-600 text-white ring-4 ring-red-500/20' 
                   : 'bg-medical-600 hover:bg-medical-500 text-white ring-4 ring-medical-500/20 shadow-[0_0_30px_rgba(139,92,246,0.3)]'}
               `}
             >
-              {isListening ? (
+              {isRecording ? (
                 <>
                   <Mic className="w-6 h-6 animate-pulse" />
                   Stop Session
@@ -539,13 +562,18 @@ export const VirtualPatientScreen: React.FC = () => {
           {/* Status Indicators */}
           <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${status === 'listening' ? 'bg-green-500' : 'bg-slate-600'}`}></div>
-              {status === 'listening' ? 'Microphone Active' : 'Microphone Ready'}
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-slate-600'}`}></div>
+              {isConnected ? 'Connected' : 'Disconnected'}
             </div>
             <span>•</span>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${cameraOn ? 'bg-cyan-500' : 'bg-slate-600'}`}></div>
-              {cameraOn ? 'Camera On' : 'Camera Off'}
+              <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></div>
+              {isRecording ? 'Microphone Active' : 'Microphone Ready'}
+            </div>
+            <span>•</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isVideoOn ? 'bg-cyan-500' : cameraOn ? 'bg-amber-500' : 'bg-slate-600'}`}></div>
+              {isVideoOn ? 'Video Streaming' : cameraOn ? 'Camera On' : 'Camera Off'}
             </div>
             <span>•</span>
             <span>Powered by Inflaixus AI</span>

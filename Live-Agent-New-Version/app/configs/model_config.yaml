@@ -1,0 +1,12 @@
+# Model configuration.
+
+default_agent_model: "gemini-2.5-flash-native-audio-latest"
+
+# Diarization (optional sidecar)
+enable_diarization: false
+diarization_min_speakers: 1
+diarization_max_speakers: 6
+diarization_languages:
+  - "ar-EG"
+  - "en-US"
+diarization_model: "long"

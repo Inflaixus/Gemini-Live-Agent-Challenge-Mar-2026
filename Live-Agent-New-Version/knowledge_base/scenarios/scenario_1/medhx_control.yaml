@@ -1,0 +1,20 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_MEDHX_CONTROL
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: medical_history_control
+audience: patient_agent
+visibility_rule: answer_only_if_asked
+slot: medhx.control
+answer_to: medhx.control
+depends_on: medhx.condition
+ask_patterns:
+  - "is it controlled"
+  - "well controlled"
+  - "how is it managed"
+  - "any complications"
+  - "any problems with it"
+  - "is your diabetes stable"
+content: |
+  If asked "Is it controlled?" / "Any complications?":
+  - "It’s well controlled."
+  - "I don’t have complications."

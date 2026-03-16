@@ -1,0 +1,34 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_NUDGES_V2
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: nudges
+audience: controller_only
+content:
+  - id: N_DIABETES_PLANNING
+    trigger:
+      phase: planning
+      missing: medical_history_checked
+    patient_prompt: "I have type 1 diabetes—does that change how we plan appointments?"
+    fire_once: true
+
+  - id: N_WHITENING_OPTION
+    trigger:
+      phase: discussion_or_planning
+      missing: options_presented
+    patient_prompt: "Would whitening work in time for the wedding?"
+    fire_once: true
+
+  - id: N_RISKS_IF_PUSHING_TREATMENT
+    trigger:
+      phase: discussion_or_planning
+      missing: risks_discussed
+    patient_prompt: "Is there any downside if we replace healthy fillings?"
+    fire_once: true
+
+  - id: N_TIMELINE_CONCERN
+    trigger:
+      phase: discussion_or_planning
+      after_turn: 3
+      missing: timeline_discussed
+    patient_prompt: "I was hoping it could be done in about 2–3 visits before the wedding. Is that realistic?"
+    fire_once: true

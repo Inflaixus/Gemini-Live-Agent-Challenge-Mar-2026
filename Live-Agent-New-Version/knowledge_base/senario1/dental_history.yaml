@@ -1,0 +1,25 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_DENTAL_HISTORY
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: dental_history
+audience: patient_agent
+visibility_rule: answer_only_if_asked
+ask_patterns:
+  - "dental history"
+  - "check-up"
+  - "checkup"
+  - "dentist visit"
+  - "hygienist"
+  - "cleaning"
+  - "when did you get"
+  - "how long have you had"
+  - "fillings done"
+content: |
+  If asked about dental attendance/hygiene:
+  - "I go for check-ups about once a year."
+  - "I see the hygienist every 6 months."
+  - "I take good care of my teeth."
+
+  If asked about the fillings:
+  - "The silver fillings were done when I was a kid."
+  - "I haven't had any recent fillings."

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { Sparkles, ClipboardList, ArrowLeft } from 'lucide-react';
+import { Sparkles, ClipboardList, ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { ScenarioProvider, useScenario } from './context/ScenarioContext';
-import { SCENARIOS } from './data/scenarios';
+import { useScenarios } from './hooks/useScenarios';
 import { ScenarioCard } from './components/ScenarioCard';
 import { VirtualPatientScreen } from './components/VirtualPatientScreen';
 import { IntroductionScreen } from './components/IntroductionScreen';
@@ -11,18 +11,19 @@ import { Scenario } from './types';
 const HomeScreen: React.FC = () => {
   const { selectScenario } = useScenario();
   const navigate = useNavigate();
+  const { scenarios, loading, error } = useScenarios();
 
   // Grouping Logic
   const groupedScenarios = useMemo(() => {
     const groups: Record<string, Scenario[]> = {};
-    SCENARIOS.forEach(scenario => {
+    scenarios.forEach(scenario => {
       if (!groups[scenario.groupName]) {
         groups[scenario.groupName] = [];
       }
       groups[scenario.groupName].push(scenario);
     });
     return groups;
-  }, []);
+  }, [scenarios]);
 
   const scenarioGroups = Object.keys(groupedScenarios);
 
@@ -140,23 +141,59 @@ const HomeScreen: React.FC = () => {
 
       {/* Grid */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          
-          {scenarioGroups.map((groupName, index) => {
-            const scenarios = groupedScenarios[groupName];
-            return (
-              <ScenarioCard 
-                key={groupName}
-                title={`Scenario ${index + 1}`}
-                category="OSCE Station"
-                description="Enter the simulation room to begin the clinical interview and assessment."
-                count={scenarios.length}
-                onClick={() => handleGroupSelect(groupName, index)}
-              />
-            );
-          })}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 text-medical-400 animate-spin mb-4" />
+            <p className="text-slate-400">Loading scenarios...</p>
+          </div>
+        )}
 
-        </div>
+        {/* Error State */}
+        {error && !loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center max-w-md">
+              <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Failed to Load Scenarios</h3>
+              <p className="text-slate-400 mb-4">{error}</p>
+              <p className="text-slate-500 text-sm">Make sure the backend server is running on port 8080</p>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && scenarioGroups.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 text-center max-w-md">
+              <ClipboardList className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No Scenarios Available</h3>
+              <p className="text-slate-400">No scenarios have been configured in the backend yet.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Scenarios Grid */}
+        {!loading && !error && scenarioGroups.length > 0 && (
+          <div className={`grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+            scenarioGroups.length === 1 
+              ? 'grid-cols-1 max-w-md mx-auto' 
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+          }`}>
+            {scenarioGroups.map((groupName, index) => {
+              const groupScenarios = groupedScenarios[groupName];
+              return (
+                <ScenarioCard 
+                  key={groupName}
+                  title={`Scenario ${index + 1}`}
+                  category="OSCE Station"
+                  description="Enter the simulation room to begin the clinical interview and assessment."
+                  count={groupScenarios.length}
+                  onClick={() => handleGroupSelect(groupName, index)}
+                />
+              );
+            })}
+          </div>
+        )}
       </main>
 
       {/* Footer */}

@@ -1,0 +1,24 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_IDENTITY_JOB
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: social_history_job
+audience: patient_agent
+visibility_rule: only_if_asked
+ask_patterns:
+  - "name"
+  - "what's your name"
+  - "who are you"
+  - "age"
+  - "how old"
+  - "what do you do"
+  - "occupation"
+  - "job"
+  - "work"
+  - "profession"
+content: |
+  If asked about name/age:
+  - "My name is Chloe Harrington."
+  - "I'm 28."
+
+  If asked what you do:
+  - "I do triathlons — I'm a semi-professional triathlete."

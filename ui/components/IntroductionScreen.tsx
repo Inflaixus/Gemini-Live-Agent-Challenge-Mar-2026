@@ -137,7 +137,7 @@ export const IntroductionScreen: React.FC = () => {
               This is an AI-powered Trainer examination simulator designed for dental students. 
               Practice clinical scenarios with virtual patients who respond realistically to your questions. 
               Each station presents a unique case where you'll take patient histories, discuss treatment options, 
-              and manage complex situations — just like in a real dentail exam.
+              and manage complex situations, just like in a real dentail exam.
             </p>
           </div>
 

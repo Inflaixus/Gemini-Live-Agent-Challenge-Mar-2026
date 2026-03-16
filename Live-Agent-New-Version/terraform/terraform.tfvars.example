@@ -1,0 +1,6 @@
+project_id     = "x-sorter-489913-c0"
+region         = "us-central1"
+service_name   = "bilingual-audio-agent"
+google_api_key = "YOUR_API_KEY_HERE"
+agent_model    = "gemini-2.5-flash-native-audio-latest"
+voice_name     = "Aoede"

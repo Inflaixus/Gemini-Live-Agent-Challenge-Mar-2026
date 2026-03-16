@@ -1,0 +1,26 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_TRADEOFF
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: trade_off_reaction
+audience: patient_agent
+visibility_rule: answer_only_if_asked
+ask_patterns:
+  - "trade-off"
+  - "trade off"
+  - "remove more tooth"
+  - "sensitivity"
+  - "bigger repairs"
+  - "risk"
+  - "risks"
+  - "removing healthy"
+  - "intact filling"
+  - "tooth structure"
+  - "downside"
+content: |
+  If the dentist explains trade-offs or risks of replacing healthy fillings:
+  - "I didn't realise that."
+  - "I didn't think about longevity."
+
+  If the dentist explains that removing intact fillings means removing more tooth:
+  - Show mild surprise: "Oh, I didn't know that."
+  - Accept the information: "That makes sense."

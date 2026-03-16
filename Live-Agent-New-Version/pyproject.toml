@@ -1,0 +1,19 @@
+[project]
+name = "live-audio-agent"
+version = "0.2.0"
+description = "Bilingual Arabic-English live audio agent using Google ADK with Vertex AI"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=1.2.0",
+    "google-genai>=1.0.0",
+    "google-cloud-aiplatform>=1.60.0",
+    "google-cloud-speech>=2.30.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "websockets>=12.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+]
+
+[tool.setuptools]
+packages = ["app", "app.core", "app.api", "app.services", "app.agents", "app.rag", "app.models"]

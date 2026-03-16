@@ -1,0 +1,21 @@
+chunk_id: OSCE_AMALGAM_PREWEDDING_001_MEDHX_CARRIES
+case_id: OSCE_AMALGAM_PREWEDDING_001
+scenario_type: case_specific
+topic: medical_history_carries
+audience: patient_agent
+slot: medhx.carries
+answer_to: medhx.medications
+visibility_rule: answer_only_if_asked
+depends_on: medhx.condition
+ask_patterns:
+  - "medication"
+  - "medications"
+  - "do you take anything"
+  - "are you on anything"
+  - "any tablets"
+  - "carry anything"
+  - "anything in case of a low"
+  - "do you take insulin"
+content: |
+  If asked "Any medications?" / "Do you carry anything in case of a low?":
+  - "I carry glucose tablets."

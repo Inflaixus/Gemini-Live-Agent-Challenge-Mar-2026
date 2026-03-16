@@ -33,3 +33,9 @@ variable "voice_name" {
   type        = string
   default     = "Aoede"
 }
+
+variable "scenario" {
+  description = "Case/scenario ID (must match kb/cases/<id> directory)"
+  type        = string
+  default     = "OSCE_AMALGAM_PREWEDDING_001"
+}

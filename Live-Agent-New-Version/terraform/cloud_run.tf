@@ -1,9 +1,10 @@
 # Build and push Docker image via Cloud Build
 resource "null_resource" "docker_build" {
   triggers = {
-    # Rebuild when any source file changes
+    # Rebuild when source, config, or KB changes
     app_hash = sha256(join("", [
       filesha256("${path.module}/../app/main.py"),
+      filesha256("${path.module}/../app/agents/patient_agent.py"),
       filesha256("${path.module}/../Dockerfile"),
       filesha256("${path.module}/../pyproject.toml"),
     ]))
@@ -71,6 +72,10 @@ resource "google_cloud_run_v2_service" "agent" {
       env {
         name  = "LIVE_RESPONSE_MODALITY"
         value = "AUDIO"
+      }
+      env {
+        name  = "SCENARIO"
+        value = var.scenario
       }
       env {
         name  = "OUTPUT_AUDIO_TRANSCRIPTION_ENABLED"

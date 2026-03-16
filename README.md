@@ -50,6 +50,19 @@ URL to test the agent: https://bilingual-audio-agent-312968462669.us-central1.ru
 Sample of the scenarios path in repo: Test Scenarios Folder
 
 ## User Interface Details
+The experience starts with a welcoming Introduction Screen that explains the simulator's purpose and lists the clinical skills students will practice. From there, students select from available OSCE stations on the Scenario Selection screen, where scenarios are randomly assigned to simulate real exam conditions.
+
+The main Virtual Patient Screen is where the magic happens. Students interact with an AI-powered patient through real-time voice conversation. Key features include:
+
+- Voice persona selection with different patient personalities and voices
+- Live audio streaming with visual feedback showing when the AI is listening
+- Optional camera preview for video-enabled sessions
+- A countdown timer extracted from scenario instructions with audio warnings
+- A collapsible sidebar with two tabs: the Candidate Brief (patient details, scenario context, and tasks) and a live Transcript of the conversation
+- A notes section for students to write down clinical observations during the session
+
+The interface provides clear status indicators for connection state, microphone activity, and video streaming. Sound effects give feedback when sessions start/stop, and toast notifications keep users informed. The whole experience is responsive and works across different screen sizes.
+
 
 ## Challenges & Future Roadmap.  
 - Roll-out to a lot of scenarios to create an actual program.

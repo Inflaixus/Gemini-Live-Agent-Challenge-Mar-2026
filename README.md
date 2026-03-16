@@ -37,9 +37,10 @@ Compute: Google Cloud Run – Hosts the ADK Agent and RAG pipeline in a stateles
   
 ## Installation(How to run) & Testing Instructions
 ### Installation
+URL to test the agent: https://bilingual-audio-agent-312968462669.us-central1.run.app
 
-
-### Testing Instructions
+### Testing Instructions  
+Sample of the scenarios path in repo: Test Scenarios Folder
 
 ## User Interface Details
 

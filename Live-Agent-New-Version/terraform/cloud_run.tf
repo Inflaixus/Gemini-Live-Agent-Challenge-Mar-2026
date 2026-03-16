@@ -17,8 +17,8 @@ resource "null_resource" "docker_build" {
     working_dir = "${path.module}/../.."
     command     = <<-EOT
       gcloud builds submit . \
-        --tag ${local.image_url} \
-        --dockerfile Live-Agent-New-Version/Dockerfile \
+        --config cloudbuild.yaml \
+        --substitutions _IMAGE_URL=${local.image_url} \
         --project ${var.project_id} \
         --quiet
     EOT

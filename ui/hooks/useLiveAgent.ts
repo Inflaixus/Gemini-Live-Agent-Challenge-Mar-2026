@@ -169,7 +169,8 @@ export const useLiveAgent = (): UseLiveAgentReturn => {
     setStatus('connecting');
     setError(null);
 
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
+    const wsUrl = import.meta.env.VITE_WS_URL ||
+      (window.location.protocol === 'https:' ? 'wss' : 'ws') + '://' + window.location.host;
     const voiceParam = voiceName ? `?voice=${encodeURIComponent(voiceName)}` : '';
     const ws = new WebSocket(`${wsUrl}/ws/${userIdRef.current}/${sessionIdRef.current}${voiceParam}`);
     ws.binaryType = 'arraybuffer';

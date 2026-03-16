@@ -1,3 +1,15 @@
+# Stage 1: Build React UI
+FROM node:20-slim AS ui-builder
+
+WORKDIR /ui
+
+COPY ui/package.json ui/package-lock.json ./
+RUN npm ci
+
+COPY ui/ ./
+RUN npm run build
+
+# Stage 2: Python backend
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -6,10 +18,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
-COPY app/ app/
-COPY kb/ kb/
-COPY static/ static/
+COPY Live-Agent-New-Version/pyproject.toml .
+COPY Live-Agent-New-Version/app/ app/
+COPY Live-Agent-New-Version/kb/ kb/
+
+# Copy built React UI (served as static files by FastAPI)
+COPY --from=ui-builder /ui/dist ui/
 
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir \

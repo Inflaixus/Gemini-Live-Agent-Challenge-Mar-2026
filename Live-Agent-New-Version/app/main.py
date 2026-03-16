@@ -11,8 +11,6 @@ startup()
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.websocket_gateway import router as ws_router
@@ -30,15 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# Routers (registered before static mount so they take priority)
 app.include_router(ws_router)
 app.include_router(health_router)
 app.include_router(scenarios_router)
 
-# Static files (current test UI — will be removed when UI moves to its own repo)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-@app.get("/")
-async def root():
-    return FileResponse("static/index.html")
+# Serve the built React UI for all unmatched paths (SPA with hash-router)
+app.mount("/", StaticFiles(directory="ui", html=True), name="ui")

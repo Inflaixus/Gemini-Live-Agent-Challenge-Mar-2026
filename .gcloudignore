@@ -1,0 +1,28 @@
+# Exclude everything in .gitignore
+.gitignore
+
+# Node modules — rebuilt during Docker build
+ui/node_modules/
+ui/dist/
+ui/.vite/
+
+# Python artifacts
+**/__pycache__/
+**/*.pyc
+**/*.egg-info/
+Live-Agent-New-Version/.venv/
+Live-Agent-New-Version/venv/
+
+# Secrets and local config
+**/.env
+**/.env.local
+
+# Dev tooling
+**/.vscode/
+**/.idea/
+Live-Agent-New-Version/terraform/
+Live-Agent-New-Version/tests/
+Live-Agent-New-Version/docs/
+Live-Agent-New-Version/scripts/
+Live-Agent-New-Version/.kiro/
+Live-Agent-New-Version/bilingual_audio_agent/

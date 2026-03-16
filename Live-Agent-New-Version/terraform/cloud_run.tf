@@ -1,20 +1,24 @@
 # Build and push Docker image via Cloud Build
 resource "null_resource" "docker_build" {
   triggers = {
-    # Rebuild when source, config, or KB changes
+    # Rebuild when source, config, KB, or UI changes
     app_hash = sha256(join("", [
       filesha256("${path.module}/../app/main.py"),
       filesha256("${path.module}/../app/agents/patient_agent.py"),
       filesha256("${path.module}/../Dockerfile"),
       filesha256("${path.module}/../pyproject.toml"),
+      filesha256("${path.module}/../../ui/package.json"),
+      filesha256("${path.module}/../../ui/App.tsx"),
     ]))
   }
 
   provisioner "local-exec" {
-    working_dir = "${path.module}/.."
+    # Use project root as build context so both Live-Agent-New-Version/ and ui/ are accessible
+    working_dir = "${path.module}/../.."
     command     = <<-EOT
-      gcloud builds submit \
+      gcloud builds submit . \
         --tag ${local.image_url} \
+        --dockerfile Live-Agent-New-Version/Dockerfile \
         --project ${var.project_id} \
         --quiet
     EOT

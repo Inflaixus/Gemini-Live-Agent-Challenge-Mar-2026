@@ -16,11 +16,18 @@ Demo Video:
 ## Key Features
 ### 1. Real-Time Multimodal Stream (ADK + Live API)
 Unlike standard REST APIs that send text back and forth,  architecture uses WebSockets. This allows for a continuous flow of PCM audio data.  
+
 ### 2. Affective Dialog & Persona Grounding
  System isn't robotic; it adapts its emotional tone.  
  Detail: By passing "Emotional Profile" as an injected context in engine.py, the Gemini 2.5 Flash model adjusts its vocabulary (e.g., "I'm worried" if the doctor is saying something to worry about). 
- 
-### 3. Clinical Accuracy: 
+
+### 3. Silence Monitoring
+After 5 sec. agent detect that no one is talking send a nudge to human if still there.  
+
+### 4. Interuption Handling
+Interuppt the agent and check stopping and preserving context.
+
+### 5. Clinical Accuracy: 
 Grounded in YAML knowledge bases (RAG).  
 
 ## Tech Stack & Google Cloud Usage.

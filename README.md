@@ -10,8 +10,8 @@ Our architecture leverages the Google ADK Framework on Cloud Run to bridge Gemin
 </p>
 
 ## Demo Video & Cloud Proof Video
-Cloud Proof Video:  
-Demo Video: 
+Cloud Proof Video:  https://drive.google.com/file/d/174NSc1LWAkPQhqYgJEVuyw6Q6tQU_nXZ/view?usp=share_link
+Demo Video: https://www.youtube.com/watch?v=zFzz619a3us
  
 ## Key Features
 ### 1. Real-Time Multimodal Stream (ADK + Live API)

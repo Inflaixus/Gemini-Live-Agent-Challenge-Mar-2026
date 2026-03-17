@@ -46,6 +46,10 @@ resource "google_cloud_run_v2_service" "agent" {
   name     = var.service_name
   location = var.region
 
+  lifecycle {
+    ignore_changes = [invoker_iam_disabled]
+  }
+
   template {
     scaling {
       min_instance_count = 0

@@ -16,11 +16,25 @@ resource "null_resource" "docker_build" {
     # Use project root as build context so both Live-Agent-New-Version/ and ui/ are accessible
     working_dir = "${path.module}/../.."
     command     = <<-EOT
-      gcloud builds submit . \
+      BUILD_ID=$(gcloud builds submit . \
         --config cloudbuild.yaml \
         --substitutions _IMAGE_URL=${local.image_url} \
         --project ${var.project_id} \
-        --quiet
+        --async \
+        --format='value(id)') \
+      && echo "Build submitted: $BUILD_ID" \
+      && while true; do \
+           STATUS=$(gcloud builds describe "$BUILD_ID" \
+             --project ${var.project_id} \
+             --format='value(status)'); \
+           echo "Build status: $STATUS"; \
+           case "$STATUS" in \
+             SUCCESS) break ;; \
+             FAILURE|CANCELLED|TIMEOUT|INTERNAL_ERROR) \
+               echo "Build failed with status: $STATUS" && exit 1 ;; \
+           esac; \
+           sleep 30; \
+         done
     EOT
   }
 
